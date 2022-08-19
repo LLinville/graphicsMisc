@@ -11,17 +11,17 @@ from glumpy import app, gloo, gl, data
 # Constants
 # -------------------------------------
 CellSize               = 1.25
-ViewportWidth          = 1312
-ViewportHeight         = 1312
-GridWidth              = 8192
-GridHeight             = 2048
+ViewportWidth          = 512
+ViewportHeight         = 512
+GridWidth              = 512
+GridHeight             = 512
 SplatRadius            = GridWidth / 8.0
 AmbientTemperature     = -1.0
 ImpulseTemperature     = 10.0
 ImpulseDensity         = 1.0
 NumJacobiIterations    = 40
-TimeStep               = 0.2125
-SmokeBuoyancy          = 0.100
+TimeStep               = 0.125
+SmokeBuoyancy          = 1.00
 SmokeWeight            = 0.05
 GradientScale          = 1.125 / CellSize
 TemperatureDissipation = 0.99
@@ -230,11 +230,6 @@ def on_draw(dt):
     prog_visualize['u_shape']  = Density.Ping.texture.shape[1], Density.Ping.texture.shape[0]
     prog_visualize['u_kernel'] = data.get("spatial-filters.npy")
     prog_visualize["Sampler"] = Density.Ping.texture
-
-    prog_visualize['u_data']   = Temperature.Ping.texture
-    prog_visualize['u_shape']  = Temperature.Ping.texture.shape[1], Temperature.Ping.texture.shape[0]
-    prog_visualize['u_kernel'] = data.get("spatial-filters.npy")
-    prog_visualize["Sampler"] = Temperature.Ping.texture
     prog_visualize["FillColor"] = 0.95, 0.925, 1.00
     prog_visualize["Scale"] =  1.0/window.width, 1.0/window.height
     prog_visualize.draw(gl.GL_TRIANGLE_STRIP)

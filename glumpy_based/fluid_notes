@@ -1,0 +1,56 @@
+
+
+Store as textures:
+Velocity
+    - (float, float, null, null)
+    Needs buffer VelA, VelB since it is updated based on its current value for advection
+
+Pressure
+    - (float, null, null, null)
+
+Temperature
+
+Pressure gradient?
+
+
+
+
+
+How to get cooling as spreading? Divergence?
+
+
+
+
+Reaction
+    Transmute
+        - Calculate how much to transmute
+        - Add potential lost as heat
+
+
+
+Movement
+    Percolate per-substance by partial density
+        - Add potential lost as heat
+    Calculate divergence of velocity
+    Update temperature by divergence (
+        * Is this redundant with pressure change?
+    Calculate gradient of pressure
+    Update velocities by gradient of pressure
+    Update velocities by gradient of gravitational potential
+    Advect
+        - Advect pressure
+        - Advect velocity
+        - Advect temperature
+    Diffuse velocity
+        - Convert difference from pre-diffusion velocity to heat
+            - Use equivalent in-place laplacian?
+        - Convert shear to heat
+
+
+
+
+
+
+
+
+

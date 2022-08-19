@@ -1,14 +1,4 @@
-#version 330 core
-// -----------------------------------------------------------------------------
-// Copyright (c) 2009-2016 Nicolas P. Rougier. All rights reserved.
-// Distributed under the (new) BSD License.
-// -----------------------------------------------------------------------------
-// From Fluid demo by Philip Rideout
-// Originals sources and explanation on http://prideout.net/blog/?p=58
-// -----------------------------------------------------------------------------
-
-#include "misc/spatial-filters.frag"
-
+#version 130
 
 // First color map
 float cAbs(vec2 z)
@@ -115,36 +105,4 @@ vec4 complexToColor(vec2 w)
     float brightness = fract(log2(r));
 
     return brightness * hue;
-}
-vec3 hsv2rgb(vec3 c) {
-    vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
-    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
-    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
-}
-
-
-uniform sampler2D u_data;
-uniform vec2 u_shape;
-uniform vec2 Scale;
-
-void main()
-{
-    vec2 texcoord = gl_FragCoord.xy * Scale;
-    vec2 v = texture2D(u_data, texcoord).rg;
-    v *= 1;
-//    vec2 v = Bicubic(u_data, u_shape, texcoord).rg;
-//    float v = texture2D(u_data, texcoord).rg;
-//    v = v*v;
-//    if (v > 0.2) {
-//        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-//    } else {
-//        gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
-//    }
-//    gl_FragColor = vec4(0.5, 0.5, 0.5, 0.5);
-
-    float mag = v.r*v.r + v.g*v.g;
-    mag = sqrt(mag);
-    vec3 hsv = vec3(atan(v.r, v.g)/(2*PI), 1, mag * 0.7 + 0.3);
-    vec3 rgb = hsv2rgb(hsv);
-    gl_FragColor = vec4(rgb, 1.0);
 }
