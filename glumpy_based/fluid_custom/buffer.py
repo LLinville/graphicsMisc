@@ -2,7 +2,14 @@ import numpy as np
 from glumpy import app, gloo, gl, data
 
 
-class Buffer:
+# class PointBuffer:
+#     def __init__(self, size, initial_value=None):
+#         dtype = [("position", np.float32, 2)]
+#         self.buffer = (np.random.random((1000, 2))*1).view(gloo.VertexBuffer)
+#         pass
+
+
+class TextureBuffer:
     def __init__(self, width, height, depth, initial_value=None):
         if initial_value is None:
             initial_value = (np.random.random((height, width, depth)) - 0.5)
@@ -29,9 +36,9 @@ class Buffer:
 
 class BufferPair:
     def __init__(self, width, height, depth, initial_value=None):
-        self.buffer_in = Buffer(width, height, depth, initial_value=initial_value)
+        self.buffer_in = TextureBuffer(width, height, depth, initial_value=initial_value)
 
-        self.buffer_out = Buffer(width, height, depth, initial_value=initial_value)
+        self.buffer_out = TextureBuffer(width, height, depth, initial_value=initial_value)
 
     def swap(self):
         self.buffer_in, self.buffer_out = self.buffer_out, self.buffer_in

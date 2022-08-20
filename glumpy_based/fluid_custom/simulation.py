@@ -1,6 +1,7 @@
 import numpy as np
 from glumpy import app, gloo, gl, data
-from buffer import Buffer, BufferPair
+from glumpy.graphics.collections import PointCollection
+from buffer import TextureBuffer, BufferPair
 from opensimplex import OpenSimplex
 from math import pi
 
@@ -19,11 +20,14 @@ def loop_noise2(x, y, scale=0.1, noisegen=None):
 
 
 class Simulation:
-    def __init__(self, width, height):
+    def __init__(self, width, height, n_points = 1000):
         self.width = width
         self.height = height
 
         self.timestep = 0.01
+
+        # self.n_points = n_points
+        # self.points = PointBuffer(np.random.random((self.n_points, 2)) * 100)
 
         noise_scale = 1.0
         initial_velocity = np.array(
@@ -35,8 +39,8 @@ class Simulation:
         )
         self.velocity = BufferPair(self.width, self.height, 2, initial_value=initial_velocity)
         self.pressure = BufferPair(self.width, self.height, 1, initial_value='zero')
-        self.pressure_gradient = Buffer(self.width, self.height, 2, initial_value='zero')
-        self.velocity_divergence = Buffer(self.width, self.height, 1, initial_value='zero')
+        self.pressure_gradient = TextureBuffer(self.width, self.height, 2, initial_value='zero')
+        self.velocity_divergence = TextureBuffer(self.width, self.height, 1, initial_value='zero')
 
         self.program_filenames = [
             "advect.frag",
@@ -46,11 +50,15 @@ class Simulation:
             "blur.frag"
         ]
         
-        self.vertex_shader_filename = "fluid.vert"
+        self.vertex_shader_filename = "shaders/plotting/fluid.vert"
         self.programs = {}
         for program_filename in self.program_filenames:
             program_name = program_filename.split('.')[0]
-            program = gloo.Program(self.vertex_shader_filename, program_filename, count=4)
+            program = gloo.Program(
+                self.vertex_shader_filename,
+                f"shaders/simulation/{program_filename}",
+                count=4
+            )
             program['Position'] = [(-1,-1), (-1,+1), (+1,-1), (+1,+1)]
             program['cell_size'] = 1.0 / self.width
             self.programs[program_name] = program
@@ -61,10 +69,11 @@ class Simulation:
         self.divergence(self.velocity.buffer_in, self.velocity_divergence)
         self.add_force(self.velocity, self.pressure_gradient, -1.0 * 0.1)
         self.add_force(self.pressure, self.velocity_divergence, -1.0 * 0.1)
-        self.blur(self.velocity)
-        self.blur(self.pressure)
+        self.blur(self.velocity, 0.001)
+        self.blur(self.pressure, 0.001)
         self.advect(self.pressure)
         self.advect(self.velocity)
+        # self.advect_points(self.velocity, self.points)
 
     def advect(self, to_advect):
         program = self.programs['advect']
@@ -101,11 +110,11 @@ class Simulation:
         to_update.buffer_out.deactivate()
         to_update.swap()
 
-    def blur(self, to_update):
+    def blur(self, to_update, intensity):
         program = self.programs['blur']
         program['field'] = to_update.buffer_in.texture
+        program['blur_intensity'] = intensity
         to_update.buffer_out.activate()
         program.draw(gl.GL_TRIANGLE_STRIP)
         to_update.buffer_out.deactivate()
         to_update.swap()
-

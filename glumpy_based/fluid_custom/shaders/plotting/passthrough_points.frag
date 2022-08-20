@@ -1,5 +1,6 @@
 uniform sampler2D field;
 uniform vec2 cell_size;
+uniform float blur_intensity;
 
 vec4 texelFetch(sampler2D sampler, vec2 pos)
 {
@@ -18,5 +19,6 @@ void main()
     vec2 w = texelFetch(field, T + vec2(-1, 0)).rg;
     vec2 c = texelFetch(field, T).rg;
 
-    gl_FragColor = vec4((4*c + n + s + e + w) / 8, 0, 1.0);
+    vec2 neighbor_average = (n + e + s + w) / 4.0;
+    gl_FragColor = vec4( blur_intensity * neighbor_average + (1-blur_intensity) * c, 0, 1.0);
 }
