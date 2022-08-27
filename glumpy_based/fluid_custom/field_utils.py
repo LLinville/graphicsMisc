@@ -12,7 +12,7 @@ def force_gaussian_puff(shape, position, radius=0.1, velocity=(0.1,0.1)):
         ] for x in np.linspace(-1, 1, shape[0])
     ])
 
-    return np.array(velocity)[np.newaxis, np.newaxis, ...] * magnitude[:, :, np.newaxis]
+    return np.array(velocity)[np.newaxis, np.newaxis, ...] * magnitude[..., np.newaxis]
 
 
 def spiral(shape):

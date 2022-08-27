@@ -14,7 +14,8 @@ class TextureBuffer:
         if initial_value is None:
             initial_value = np.zeros((height, width, depth))
 
-        self.texture = np.array(initial_value, dtype=np.float32).view(gloo.TextureFloat2D)
+        self.texture_array = np.array(initial_value, dtype=np.float32)
+        self.texture = self.texture_array.view(gloo.TextureFloat2D)
         self.texture.interpolation = gl.GL_LINEAR
         self.texture.wrapping = gl.GL_REPEAT
         self.buffer = gloo.FrameBuffer(color=self.texture)

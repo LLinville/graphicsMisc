@@ -5,11 +5,12 @@ layout(points, max_vertices = 1100) out;
 
 //out vec2
 void main(void) {
-    float dt = 0.0021;
+    float len = 0.0021;
 
     for (int i = 0; i < 50; i++) {
-        gl_Position = gl_in[0].gl_Position + vec4(dt * i * texture2D(velocity, gl_in[0].gl_Position.xy/2 + vec2(0.5, 0.5)).xy, 0, 0);
-        //    gl_Position = vec4(0.5, 0.5, 0, 1);
+        vec2 vel = texture2D(velocity, gl_in[0].gl_Position.xy/2 + vec2(0.5, 0.5)).xy / 10000;
+        len = sqrt(sqrt(vel.x*vel.x+vel.y*vel.y));
+        gl_Position = gl_in[0].gl_Position + vec4(len * i * texture2D(velocity, gl_in[0].gl_Position.xy/2 + vec2(0.5, 0.5)).xy, 0, 0);
         EmitVertex();
     }
 

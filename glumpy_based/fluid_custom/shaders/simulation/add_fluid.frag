@@ -14,5 +14,5 @@ void main()
     vec2 relative_position = fragCoord - position;
     float to_add = amount / exp((rpos.x*rpos.x + rpos.y*rpos.y) / radius);
     to_add = rpos.x * rpos.x + rpos.y * rpos.y;
-    gl_FragColor = vec4(0.9999*current + to_add/10000, 0, 0, 0);
+    gl_FragColor = vec4(1*current + 0*to_add/10000, 0, 0, 0);
 }

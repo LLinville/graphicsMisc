@@ -123,7 +123,7 @@ vec3 hsv2rgb(vec3 c) {
 }
 
 vec3 scalar_range(float magnitude, vec3 color_negative, vec3 color_positive) {
-    float scaling_factor = 10;
+    float scaling_factor = 1;
     float scaled = 2 / (1 + exp(-1 * magnitude * scaling_factor)) - 1;
     return max(0, scaled) * color_positive - min(0, scaled) * color_negative;
 }

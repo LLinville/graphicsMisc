@@ -1,4 +1,5 @@
 uniform sampler2D velocity;
+uniform sampler2D divergence;
 uniform sampler2D to_advect;
 uniform vec2 cell_size;
 uniform float timestep;
@@ -14,5 +15,6 @@ void main()
 
     vec2 vel = texture2D(velocity, fragCoord).xy;
     vec2 coord = (fragCoord - cell_size * timestep * vec2(vel));
+
     gl_FragColor = 1.0 * texture2D(to_advect, coord);
 }

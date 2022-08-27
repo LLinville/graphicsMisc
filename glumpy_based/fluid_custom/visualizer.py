@@ -22,6 +22,8 @@ class Visualizer:
         self.visualization_program['Position'] = [(-1,-1), (-1,+1), (+1,-1), (+1,+1)]
         self.visualization_program.fragment._version = 150
 
+        self.mouse_location = (0,0)
+
         arrows = False
         if not arrows:
             self.n_arrows_width = 32
@@ -101,7 +103,20 @@ class Visualizer:
 
         @window.event
         def on_draw(a=None):
+            if self.simulation.frame % 100 == 0:
+                m = self.mouse_location
+                print(f"Mouse at {m[0]},{m[1]}")
+                fluid = self.simulation.trace_fluid.buffer_in.texture.get()[
+                    int(m[1] / self.window_width * self.sim_width)
+                ][
+                    int(m[0] / self.window_height * self.sim_width)
+                ]
+                print(f"Fluid at mouse: {fluid[0]}")
             self._on_draw(0)
+
+        @window.event
+        def on_mouse_motion(x, y, dx, dy):
+            self.mouse_location = (x, y)
 
         app.run()
 

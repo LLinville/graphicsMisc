@@ -33,17 +33,20 @@ class Simulation:
 
         noise_scale = 1.0
 
+        self.frame = 0
+
         initial_velocity = force_gaussian_puff(
             shape=(width,width),
             position=(0.3,0),
             velocity=(-1,0.1),
             radius=0.01
-        ) + force_gaussian_puff(
+        ) + 0*force_gaussian_puff(
             shape=(width,width),
             position=(-0.1,0.0),
             velocity=(1,0),
             radius=0.01
         )
+
 
 
         self.velocity = BufferPair(self.width, self.height, 2, initial_value=initial_velocity)
@@ -52,7 +55,18 @@ class Simulation:
         self.velocity_divergence = TextureBuffer(self.width, self.height, 1)
         self.curl = TextureBuffer(self.width, self.height, 1)
 
-        self.trace_fluid = BufferPair(self.width, self.height, 1)
+        # initial_trace_fluid = force_gaussian_puff(
+        #     shape=(width,width),
+        #     position=(0.3,0),
+        #     velocity=(1),
+        #     radius=0.01
+        # )
+
+        initial_trace_fluid = np.zeros((self.width, self.width, 4))
+        initial_trace_fluid[200:300,300:400] = (1,0,0,0)
+        self.trace_fluid = BufferPair(self.width, self.height, 4, initial_value=initial_trace_fluid)
+
+        self.advect_given = TextureBuffer(self.width, self.height, 4)
 
         self.program_filenames = [
             "advect.frag",
@@ -61,7 +75,9 @@ class Simulation:
             "curl.frag",
             "add_force.frag",
             "blur.frag",
-            "add_fluid.frag"
+            "add_fluid.frag",
+            "conserving_advect.frag",
+            "advect_given.frag"
         ]
         
         self.vertex_shader_filename = "shaders/plotting/fluid.vert"
@@ -78,9 +94,11 @@ class Simulation:
             self.programs[program_name] = program
 
     def step(self):
-        pass
+        if self.frame % 100 == 0:
+            print(np.sum(self.trace_fluid.buffer_in.texture.get()))
+
         self.run_curl(self.velocity.buffer_in, self.curl)
-        self.add_fluid(self.trace_fluid, (0.5,0.45), amount=0.01)
+        # self.add_fluid(self.trace_fluid, (0.5,0.45), amount=0.1)
         for _ in range(1):
             self.run_gradient(self.pressure.buffer_in, self.pressure_gradient)
             self.run_divergence(self.velocity.buffer_in, self.velocity_divergence)
@@ -88,21 +106,66 @@ class Simulation:
             self.add_force(self.pressure, self.velocity_divergence, -1.0 * 0.1)
             self.run_blur(self.velocity, 0.001)
             self.run_blur(self.pressure, 0.001)
-            self.run_blur(self.trace_fluid, 0.001)
+            # self.run_blur(self.trace_fluid, 0.01)
 
         for _ in range(1):
-            self.run_advect(self.pressure)
-            self.run_advect(self.trace_fluid, self.timestep * 1*10)
-            self.run_advect(self.velocity)
+            self.run_conserving_advect(self.trace_fluid, self.timestep * 0.001)
+            # self.run_advect(self.trace_fluid, self.timestep * 1*1)
+            # self.run_advect_given(self.trace_fluid)
+        self.run_advect(self.pressure)
+        self.run_advect(self.velocity)
+
+        self.frame += 1
         # self.advect_points(self.velocity, self.points)
 
-    def run_advect(self, to_advect, timestep = None):
+    def run_diverging_advect(self, to_advect, timestep=None):
         if timestep is None:
             timestep = self.timestep
         program = self.programs['advect']
         program['velocity'] = self.velocity.buffer_in.texture
         program['to_advect'] = to_advect.buffer_in.texture
         program['timestep'] = timestep
+        program['divergence'] = self.velocity_divergence.texture
+        to_advect.buffer_out.activate()
+        program.draw(gl.GL_TRIANGLE_STRIP)
+        to_advect.buffer_out.deactivate()
+        to_advect.swap()
+
+    def run_conserving_advect(self, to_advect, timestep=None):
+        if timestep is None:
+            timestep = self.timestep
+        program = self.programs['conserving_advect']
+        program['velocity'] = self.velocity.buffer_in.texture
+        program['to_advect'] = to_advect.buffer_in.texture
+        program['timestep'] = timestep
+        to_advect.buffer_out.activate()
+        program.draw(gl.GL_TRIANGLE_STRIP)
+        to_advect.buffer_out.deactivate()
+        to_advect.swap()
+
+    def run_advect_given(self, to_advect, timestep=None):
+        if timestep is None:
+            timestep = self.timestep
+        program = self.programs['advect_given']
+        program['velocity'] = self.velocity.buffer_in.texture
+        program['to_advect'] = self.trace_fluid.buffer_in.texture
+        program['timestep'] = timestep
+        self.advect_given.activate()
+        program.draw(gl.GL_TRIANGLE_STRIP)
+        self.advect_given.deactivate()
+        to_advect.swap()
+
+    def run_advect(self, to_advect, timestamp=None):
+        self.run_diverging_advect(to_advect, timestep=timestamp)
+
+    def run_(self, to_advect, timestep = None):
+        if timestep is None:
+            timestep = self.timestep
+        program = self.programs['advect']
+        program['velocity'] = self.velocity.buffer_in.texture
+        program['to_advect'] = to_advect.buffer_in.texture
+        program['timestep'] = timestep
+        program['divergence'] = self.velocity_divergence.texture
         to_advect.buffer_out.activate()
         program.draw(gl.GL_TRIANGLE_STRIP)
         to_advect.buffer_out.deactivate()
