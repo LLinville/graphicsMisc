@@ -12,8 +12,6 @@ from glumpy import app, gloo, gl, data
 class TextureBuffer:
     def __init__(self, width, height, depth, initial_value=None):
         if initial_value is None:
-            initial_value = (np.random.random((height, width, depth)) - 0.5)
-        elif initial_value == 'zero':
             initial_value = np.zeros((height, width, depth))
 
         self.texture = np.array(initial_value, dtype=np.float32).view(gloo.TextureFloat2D)

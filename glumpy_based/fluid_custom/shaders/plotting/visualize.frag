@@ -122,6 +122,14 @@ vec3 hsv2rgb(vec3 c) {
     return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
 }
 
+vec3 scalar_range(float magnitude, vec3 color_negative, vec3 color_positive) {
+    float scaling_factor = 10;
+    float scaled = 2 / (1 + exp(-1 * magnitude * scaling_factor)) - 1;
+    return max(0, scaled) * color_positive - min(0, scaled) * color_negative;
+}
+
+
+
 
 uniform sampler2D u_data;
 uniform vec2 u_shape;
@@ -142,9 +150,10 @@ void main()
 //    }
 //    gl_FragColor = vec4(0.5, 0.5, 0.5, 0.5);
 
-    float mag = v.r*v.r + v.g*v.g;
-    mag = sqrt(mag);
-    vec3 hsv = vec3(atan(v.r, v.g)/(2*PI), 1, mag * 0.7 + 0.3);
-    vec3 rgb = hsv2rgb(hsv);
+//    float mag = v.r*v.r + v.g*v.g;
+//    mag = sqrt(mag);
+//    vec3 hsv = vec3(atan(v.r, v.g)/(2*PI), 1, mag * 0.7 + 0.3);
+//    vec3 rgb = hsv2rgb(hsv);
+    vec3 rgb = scalar_range(v.x, vec3(1, 0, 0), vec3(0, 1, 0));
     gl_FragColor = vec4(rgb, 1.0);
 }
