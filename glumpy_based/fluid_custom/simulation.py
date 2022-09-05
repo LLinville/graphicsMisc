@@ -5,7 +5,7 @@ from buffer import TextureBuffer, BufferPair
 from opensimplex import OpenSimplex
 from math import pi
 
-from field_utils import force_gaussian_puff
+from field_utils import force_gaussian_puff, rotation
 
 noise_x = OpenSimplex(seed=1)
 noise_y = OpenSimplex(seed=0)
@@ -26,7 +26,7 @@ class Simulation:
         self.width = width
         self.height = height
 
-        self.timestep = 0.1
+        self.timestep = 0.15
 
         # self.n_points = n_points
         # self.points = PointBuffer(np.random.random((self.n_points, 2)) * 100)
@@ -35,19 +35,18 @@ class Simulation:
 
         self.frame = 0
 
-        initial_velocity = force_gaussian_puff(
+        initial_velocity = 1*force_gaussian_puff(
             shape=(width,width),
             position=(0.3,0),
             velocity=(-1,0.1),
             radius=0.01
-        ) + 0*force_gaussian_puff(
+        ) + 1*force_gaussian_puff(
             shape=(width,width),
-            position=(-0.1,0.0),
-            velocity=(1,0),
+            position=(-0.3,0.10),
+            velocity=(1,-1),
             radius=0.01
         )
-
-
+        # initial_velocity = rotation((self.width, self.height))*0.16
 
         self.velocity = BufferPair(self.width, self.height, 2, initial_value=initial_velocity)
         self.pressure = BufferPair(self.width, self.height, 1)
@@ -63,7 +62,8 @@ class Simulation:
         # )
 
         initial_trace_fluid = np.zeros((self.width, self.width, 4))
-        initial_trace_fluid[200:300,300:400] = (1,0,0,0)
+        # initial_trace_fluid[115:210, 118:182] = (1,0,0,0)
+        initial_trace_fluid[self.width//5:self.width*3//5, self.width//5:self.width*3//5] = (1,0,0,0)
         self.trace_fluid = BufferPair(self.width, self.height, 4, initial_value=initial_trace_fluid)
 
         self.advect_given = TextureBuffer(self.width, self.height, 4)
@@ -97,9 +97,10 @@ class Simulation:
         if self.frame % 100 == 0:
             print(np.sum(self.trace_fluid.buffer_in.texture.get()))
 
-        self.run_curl(self.velocity.buffer_in, self.curl)
         # self.add_fluid(self.trace_fluid, (0.5,0.45), amount=0.1)
         for _ in range(1):
+            pass
+            # self.run_curl(self.velocity.buffer_in, self.curl)
             self.run_gradient(self.pressure.buffer_in, self.pressure_gradient)
             self.run_divergence(self.velocity.buffer_in, self.velocity_divergence)
             self.add_force(self.velocity, self.pressure_gradient, -1.0 * 0.1)
@@ -109,11 +110,18 @@ class Simulation:
             # self.run_blur(self.trace_fluid, 0.01)
 
         for _ in range(1):
-            self.run_conserving_advect(self.trace_fluid, self.timestep * 0.001)
+            self.run_conserving_advect(self.trace_fluid, self.timestep * 1.1)
+            self.run_conserving_advect(self.velocity, self.timestep * 1.1)
+            self.run_conserving_advect(self.pressure, self.timestep * 1.1)
             # self.run_advect(self.trace_fluid, self.timestep * 1*1)
             # self.run_advect_given(self.trace_fluid)
-        self.run_advect(self.pressure)
-        self.run_advect(self.velocity)
+            # given = self.advect_given.texture.get().copy()
+            # before_advect = self.trace_fluid.buffer_in.texture.get().copy()
+            # self.add_force(self.trace_fluid, self.advect_given, 0.1)
+            # after_advect = self.trace_fluid.buffer_in.texture.get()
+            pass
+        # self.run_advect(self.pressure)
+        # self.run_advect(self.velocity)
 
         self.frame += 1
         # self.advect_points(self.velocity, self.points)
@@ -148,12 +156,12 @@ class Simulation:
             timestep = self.timestep
         program = self.programs['advect_given']
         program['velocity'] = self.velocity.buffer_in.texture
-        program['to_advect'] = self.trace_fluid.buffer_in.texture
+        program['to_advect'] = to_advect.buffer_in.texture
         program['timestep'] = timestep
         self.advect_given.activate()
         program.draw(gl.GL_TRIANGLE_STRIP)
         self.advect_given.deactivate()
-        to_advect.swap()
+        # to_advect.swap()
 
     def run_advect(self, to_advect, timestamp=None):
         self.run_diverging_advect(to_advect, timestep=timestamp)

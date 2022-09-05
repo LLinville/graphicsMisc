@@ -28,3 +28,14 @@ def spiral(shape):
     )
 
     return force
+
+
+def rotation(shape):
+    velocity = np.array([
+        [
+            (-1*y, x)
+            for x in np.linspace(-1, 1, shape[1])
+        ] for y in np.linspace(-1, 1, shape[0])
+    ])
+
+    return velocity

@@ -11,7 +11,7 @@ from simulation import Simulation
 class Visualizer:
 
     def __init__(self):
-        self.sim_width = 512
+        self.sim_width = 256
         self.sim_height = self.sim_width
         self.window_width = 1000
         self.window_height = 1000
@@ -55,7 +55,7 @@ class Visualizer:
 
         lines = True
         if lines:
-            self.n_lines_width = 130
+            self.n_lines_width = 60
             # self.line_start_positions = (np.random.random((self.n_lines_width ** 2, 2)) - 0.5) * 2.0
             self.line_start_positions = np.zeros((self.n_lines_width ** 2, 2), dtype=np.float32)
             for x in range(self.n_lines_width):
@@ -103,20 +103,31 @@ class Visualizer:
 
         @window.event
         def on_draw(a=None):
-            if self.simulation.frame % 100 == 0:
+            if self.simulation.frame % 400 == 0:
                 m = self.mouse_location
                 print(f"Mouse at {m[0]},{m[1]}")
-                fluid = self.simulation.trace_fluid.buffer_in.texture.get()[
+                buffer_to_print = self.simulation.trace_fluid.buffer_out
+                fluid = buffer_to_print.texture.get()[
                     int(m[1] / self.window_width * self.sim_width)
                 ][
                     int(m[0] / self.window_height * self.sim_width)
                 ]
-                print(f"Fluid at mouse: {fluid[0]}")
+                print(f"Fluid at mouse: {fluid}")
             self._on_draw(0)
 
         @window.event
         def on_mouse_motion(x, y, dx, dy):
             self.mouse_location = (x, y)
+
+        @window.event
+        def on_mouse_press(x, y, button):
+            self.simulation.add_fluid(
+                self.simulation.trace_fluid,
+                (x/self.window_width, y/self.window_height),
+                0.01,
+                10
+            )
+            # self.simulation.run_blur(self.simulation.trace_fluid, 100)
 
         app.run()
 

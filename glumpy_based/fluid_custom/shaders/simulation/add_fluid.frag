@@ -13,6 +13,7 @@ void main()
     float current = texture2D(field, fragCoord).x;
     vec2 relative_position = fragCoord - position;
     float to_add = amount / exp((rpos.x*rpos.x + rpos.y*rpos.y) / radius);
-    to_add = rpos.x * rpos.x + rpos.y * rpos.y;
-    gl_FragColor = vec4(1*current + 0*to_add/10000, 0, 0, 0);
+//    to_add = rpos.x * rpos.x + rpos.y * rpos.y;
+    gl_FragColor = vec4(1*current + 1*to_add/1, 0, 0, 1);
+//    gl_FragColor = vec4(1,0,0,1);
 }
